@@ -1,5 +1,5 @@
 hw_display_modules = {}
-
+softmmu_ss.add(when: 'CONFIG_PVGPU', if_true: files('pvgpu.c'))
 system_ss.add(when: 'CONFIG_DDC', if_true: files('i2c-ddc.c'))
 system_ss.add(when: 'CONFIG_EDID', if_true: files('edid-generate.c', 'edid-region.c'))
 
