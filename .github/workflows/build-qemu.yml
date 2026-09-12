@@ -37,7 +37,7 @@ jobs:
           mingw-w64-x86_64-glib2
           mingw-w64-x86_64-pixman
           mingw-w64-x86_64-SDL2
-          mingw-w64-x86_64-opengl
+          mingw-w64-x86_64-libepoxy
           mingw-w64-x86_64-libslirp
 
     - name: Configure QEMU Build
