@@ -15,6 +15,14 @@ config VGA_CIRRUS
     depends on PCI
     select VGA
 
+config PVGPU
+    bool
+    default y if PCI_DEVICES
+    depends on PCI
+    help
+      Paravirtualized GPU device for Windows guests.
+      Requires pvgpu-backend service running on host.
+
 config G364FB
     bool
 
