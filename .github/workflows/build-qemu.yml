@@ -12,6 +12,10 @@ jobs:
     runs-on: windows-2022
 
     steps:
+    # ADD THIS STEP: Tell Git to allow paths longer than 260 characters on Windows
+    - name: Enable Git Long Paths
+      run: git config --system core.longpaths true
+
     - name: Checkout QEMU Source
       uses: actions/checkout@v4
       with:
