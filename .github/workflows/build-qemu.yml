@@ -1,0 +1,77 @@
+name: Build QEMU for Windows (PVGPU)
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch: # Allows you to trigger it manually
+
+jobs:
+  build:
+    runs-on: windows-2022
+
+    steps:
+    - name: Checkout QEMU Source
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Setup MSYS2 Environment
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: MINGW64
+        update: true
+        # Install the compiler, meson, ninja, and development libraries for graphics/hardware
+        install: >-
+          base-devel
+          git
+          mingw-w64-x86_64-toolchain
+          mingw-w64-x86_64-python
+          mingw-w64-x86_64-meson
+          mingw-w64-x86_64-ninja
+          mingw-w64-x86_64-glib2
+          mingw-w64-x86_64-pixman
+          mingw-w64-x86_64-SDL2
+          mingw-w64-x86_64-opengl
+          mingw-w64-x86_64-libslirp
+
+    - name: Configure QEMU Build
+      shell: msys2 {0}
+      run: |
+        mkdir build
+        cd build
+        # Configure for x86_64 target. Enable SDL and OpenGL so the PVGPU host can render to a window.
+        ../configure --target-list=x86_64-softmmu \
+                     --enable-sdl \
+                     --enable-opengl \
+                     --enable-slirp \
+                     --disable-werror
+
+    - name: Build QEMU
+      shell: msys2 {0}
+      run: |
+        cd build
+        make -j$(nproc)
+
+    - name: Package QEMU and Dependencies
+      shell: msys2 {0}
+      run: |
+        mkdir release
+        # Copy the main executable
+        cp build/qemu-system-x86_64.exe release/
+        
+        # Copy BIOS and firmware files
+        cp -r pc-bios release/
+        
+        # Copy required MinGW64 dynamic libraries (.dll files) so it runs standalone on Windows
+        cp /mingw64/bin/*.dll release/
+        
+        # Remove unnecessary libstdc++ debug DLLs to save space
+        rm release/libstdc++*-6.dll || true
+
+    - name: Upload QEMU Windows Build
+      uses: actions/upload-artifact@v4
+      with:
+        name: qemu-windows-x86_64-pvgpu
+        path: release/
